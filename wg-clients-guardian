@@ -50,7 +50,7 @@ while IFS= read -r LINE; do
 	fi	
 
 	# setup notification variable
-	send_notification="yes"
+	send_notification="no"
 	  
 	# last client status
 	LAST_CONNECTION_STATUS=$(cat $CLIENT_FILE)
