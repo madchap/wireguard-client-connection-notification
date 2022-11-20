@@ -34,6 +34,7 @@ if [ ! -f "$1" ]; then
 	exit 1
 fi
 WEBHOOK_ID=$(awk -F'=' '/^webhook=/ { print $2}' $1)
+HA_URL=$(awk -F'=' '/^ha_url=/ { print $2}' $1)
 
 while IFS= read -r LINE; do
 	PUBLIC_KEY=$(awk '{ print $1 }' <<< "$LINE")
@@ -85,7 +86,7 @@ while IFS= read -r LINE; do
 	if [ "no" != "$send_notification" ]; then
 		printf "The client %s is %s\n" $CLIENT_NAME $send_notification
 		MESSAGE="🐉 Wireguard: \`$CLIENT_NAME is $send_notification from $REMOTE_IP\`"
-        curl -X POST "${HA_URL}/api/webhook/62e1eafc-288f-4ba5-bab3-14f73f9977a0 -d {\"client\": \"${CLIENT_NAME}\", \"ip\": \"${REMOTE_IP}\"}
+        curl -X POST "${HA_URL}/api/webhook/62e1eafc-288f-4ba5-bab3-14f73f9977a0 -d {\"client\": \"${CLIENT_NAME}\", \"ip\": \"${REMOTE_IP}\"}"
 	else
 		printf "The client %s is %s, no notification will be send.\n" $CLIENT_NAME $(cat $CLIENT_FILE)"
 	fi
