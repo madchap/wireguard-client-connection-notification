@@ -55,10 +55,10 @@ while IFS= read -r LINE; do
 	send_notification="no"
 	  
 	# last client status
-	read LAST_CONNECTION_STATUS=$(cat $CLIENT_FILE)
+	LAST_CONNECTION_STATUS=$(cat $CLIENT_FILE)
 	  
 	# elapsed seconds from last connection
-	read LAST_SEEN_SECONDS=$(date -d @"$LAST_SEEN" '+%s')
+	LAST_SEEN_SECONDS=$(date -d @"$LAST_SEEN" '+%s')
 	
 	# it the user is online
 	if [ "$LAST_SEEN" -ne 0 ]; then
