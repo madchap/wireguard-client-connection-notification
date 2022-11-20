@@ -26,7 +26,7 @@ fi
 
 # check if the user type the telegram config file and that file exists
 if [ ! "$1" ]; then
-	printf "The config file with telegram chat id and bot token is required\n"
+	printf "The config file with the webhook ID and the Home Assistant URL is required.\n"
 	exit 1
 fi
 if [ ! -f "$1" ]; then
@@ -50,7 +50,7 @@ while IFS= read -r LINE; do
 	fi	
 
 	# setup notification variable
-	send_notification="no"
+	send_notification="yes"
 	  
 	# last client status
 	readonly LAST_CONNECTION_STATUS=$(cat $CLIENT_FILE)
@@ -85,9 +85,9 @@ while IFS= read -r LINE; do
 	if [ "no" != "$send_notification" ]; then
 		printf "The client %s is %s\n" $CLIENT_NAME $send_notification
 		readonly MESSAGE="🐉 Wireguard: \`$CLIENT_NAME is $send_notification from $REMOTE_IP\`"
-        curl -s -X POST "${HA_URL}/api/webhook/62e1eafc-288f-4ba5-bab3-14f73f9977a0 -d {"client": "${CLIENT_NAME}", "ip": "${REMOTE_IP}"}
+        curl -s -X POST "${HA_URL}/api/webhook/62e1eafc-288f-4ba5-bab3-14f73f9977a0 -d {"client": "${CLIENT_NAME}", "ip": "${REMOTE_IP}"
 	else
-		printf "The client %s is %s, no notification will be send.\n" $CLIENT_NAME $(cat $CLIENT_FILE)
+		printf "The client %s is %s, no notification will be send.\n" $CLIENT_NAME $(cat $CLIENT_FILE)"
 	fi
 
 done <<< "$WIREGUARD_CLIENTS"
