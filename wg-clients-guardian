@@ -1,11 +1,14 @@
 #!/bin/bash
-# This script is written by Alfio Salanitri <www.alfiosalanitri.it> and are licensed under MIT License.
-# Credits: This script is inspired to https://github.com/pivpn/pivpn/blob/master/scripts/wireguard/clientSTAT.sh
+# This script is adapted from https://github.com/alfiosalanitri/wireguard-client-connection-notification
 
 # config variables
 readonly CURRENT_PATH=$(pwd)
-readonly CLIENTS_DIRECTORY="$CURRENT_PATH/clients"
+readonly CLIENTS_DIRECTORY="/data/wg_clients"
 readonly NOW=$(date +%s)
+
+if [ ! "$CLIENTS_DIRECTORY" ]; then
+	mkdir -p "$CLIENTS_DIRECTORY"
+fi
 
 # after X minutes the clients will be considered disconnected
 readonly TIMEOUT=15
@@ -30,14 +33,15 @@ if [ ! -f "$1" ]; then
 	printf "This config file doesn't exists\n"
 	exit 1
 fi
-readonly TELEGRAM_CHAT_ID=$(awk -F'=' '/^chat=/ { print $2}' $1)
-readonly TELEGRAM_TOKEN=$(awk -F'=' '/^token=/ { print $2}' $1)
+readonly WEBHOOK_ID=$(awk -F'=' '/^webhook=/ { print $2}' $1)
 
 while IFS= read -r LINE; do
 	readonly PUBLIC_KEY=$(awk '{ print $1 }' <<< "$LINE")
 	readonly REMOTE_IP=$(awk '{ print $3 }' <<< "$LINE" | awk -F':' '{print $1}')
 	readonly LAST_SEEN=$(awk '{ print $5 }' <<< "$LINE")
-	readonly CLIENT_NAME=$(grep -R "$PUBLIC_KEY" /etc/wireguard/keys/ | awk -F"/etc/wireguard/keys/|_pub:" '{print $2}' | sed -e 's./..g')
+	# on the Home Assistant add-on, the keys directory may not be there, preferring a static file for my needs anyways
+	# 1 field pubkey, 2 field name
+	readonly CLIENT_NAME=$(grep "$PUBLIC_KEY" /data/wg_clients.txt | awk '{print $2}')
 	readonly CLIENT_FILE="$CLIENTS_DIRECTORY/$CLIENT_NAME.txt"
 
 	# create the client file if not exists.
@@ -77,11 +81,11 @@ while IFS= read -r LINE; do
 		fi
 	fi
 
-	# send notification to telegram
+	# send notification
 	if [ "no" != "$send_notification" ]; then
 		printf "The client %s is %s\n" $CLIENT_NAME $send_notification
-		readonly MESSAGE="🐉 Wireguard: \`$CLIENT_NAME is $send_notification from ip address $REMOTE_IP\`"
-		curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" -F chat_id=$TELEGRAM_CHAT_ID -F text="$MESSAGE" -F parse_mode="MarkdownV2" > /dev/null 2>&1
+		readonly MESSAGE="🐉 Wireguard: \`$CLIENT_NAME is $send_notification from $REMOTE_IP\`"
+        curl -s -X POST "${HA_URL}/api/webhook/62e1eafc-288f-4ba5-bab3-14f73f9977a0 -d {"client": "${CLIENT_NAME}", "ip": "${REMOTE_IP}"}
 	else
 		printf "The client %s is %s, no notification will be send.\n" $CLIENT_NAME $(cat $CLIENT_FILE)
 	fi
